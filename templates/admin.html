@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Supplements Admin Dashboard</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/5w2fl3vb.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <img src="{{ url_for('static', filename='images/5w2fl3vb.svg') }}" alt="Rock Supplements Logo" height="40">
+                    Rock Admin
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('admin') }}">Home</a></li>
+                    <li><a href="#">Welcome, {{ session.get('name', 'User') }}</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="admin-container">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Admin Panel</h2>
+                    <p>{{ session.get('role', 'staff').capitalize() }} Dashboard</p>
+                </div>
+                <ul class="sidebar-menu">
+                    <li><a href="#" class="active" data-tab="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li><a href="#" data-tab="sessions"><i class="fas fa-comments"></i> Chat Sessions</a></li>
+                    <li><a href="#" data-tab="users"><i class="fas fa-users"></i> Users</a></li>
+                    <li><a href="#" data-tab="products"><i class="fas fa-box"></i> Products</a></li>
+                    <li><a href="#" data-tab="faqs"><i class="fas fa-question-circle"></i> FAQs <span id="pending-faqs-badge" class="notification-badge" style="display: none;">0</span></a></li>
+                    <li><a href="#" data-tab="promotions"><i class="fas fa-tag"></i> Promotions</a></li>
+                    {% if session.get('role') == 'agent' %}
+                    <li><a href="#" data-tab="active-chats"><i class="fas fa-headset"></i> Active Chats</a></li>
+                    {% endif %}
+                    <li><a href="#" data-tab="analytics"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                </ul>
+            </div>
+
+            <div class="main-content">
+                <!-- Dashboard Tab -->
+                <div class="tab-content" id="dashboard">
+                    <div class="dashboard-header">
+                        <h1>Dashboard</h1>
+                        <div>
+                            <button class="btn" id="refresh-stats"><i class="fas fa-sync"></i> Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <h3>Active Sessions</h3>
+                            <div class="stat-value" id="active-sessions-count">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Users</h3>
+                            <div class="stat-value" id="total-users-count">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Products</h3>
+                            <div class="stat-value" id="products-count">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h3>FAQs</h3>
+                            <div class="stat-value" id="faqs-count">0</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Recent Sessions</h2>
+                            <a href="#" class="btn view-all-btn" data-tab="sessions">View All</a>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User</th>
+                                        <th>Start Time</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-sessions-table">
+                                    <!-- Sessions will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Recent Users</h2>
+                            <a href="#" class="btn view-all-btn" data-tab="users">View All</a>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Joined</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-users-table">
+                                    <!-- Users will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other tabs will be dynamically loaded -->
+                <div class="tab-content" id="sessions" style="display: none;"></div>
+                <div class="tab-content" id="users" style="display: none;"></div>
+                <div class="tab-content" id="products" style="display: none;"></div>
+                <div class="tab-content" id="faqs" style="display: none;"></div>
+                <div class="tab-content" id="promotions" style="display: none;"></div>
+                <div class="tab-content" id="active-chats" style="display: none;"></div>
+                <div class="tab-content" id="analytics" style="display: none;"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Rock Supplements. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Modals for CRUD operations -->
+    <!-- New Benefit Modal -->
+    <div class="modal" id="new-benefit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Health Benefit</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="new-benefit-form">
+                <div class="form-group">
+                    <label for="new-benefit-name">Benefit Name</label>
+                    <input type="text" id="new-benefit-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="new-benefit-description">Description</label>
+                    <textarea id="new-benefit-description" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="new-benefit-category">Category</label>
+                    <select id="new-benefit-category" class="form-control" required>
+                        <option value="muscle_building">Muscle Building</option>
+                        <option value="weight_management">Weight Management</option>
+                        <option value="energy_performance">Energy & Performance</option>
+                        <option value="general_health">General Health</option>
+                        <option value="recovery">Recovery</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Save Benefit</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="product-modal-title">Add Product</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="form-group">
+                    <label for="product-name">Name</label>
+                    <input type="text" id="product-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-description">Description</label>
+                    <textarea id="product-description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="product-category">Category</label>
+                    <select id="product-category" class="form-control" required>
+                        <!-- Categories will be loaded here -->
+                    </select>
+                </div>
+                <div class="form-group" id="new-category-group" style="display: none;">
+                    <label for="new-category-name">New Category Name</label>
+                    <input type="text" id="new-category-name" class="form-control" placeholder="Enter new category name">
+                </div>
+                <div class="form-group">
+                    <label for="product-price">Price</label>
+                    <input type="number" id="product-price" class="form-control" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-stock">Stock Quantity</label>
+                    <input type="number" id="product-stock" class="form-control" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-image">Image URL</label>
+                    <input type="text" id="product-image" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="product-brand">Brand</label>
+                    <input type="text" id="product-brand" class="form-control" placeholder="Enter product brand">
+                </div>
+                <div class="form-group">
+                    <label for="product-ingredients">Ingredients</label>
+                    <textarea id="product-ingredients" class="form-control" rows="3" placeholder="Enter full ingredients list (e.g., Whey Protein Isolate, Natural Flavors, Lecithin, Stevia Extract)"></textarea>
+                    <small class="form-text text-muted">List all ingredients for customer reference and allergy information.</small>
+                </div>
+                <div class="form-group">
+                    <label for="product-usage-instructions">Usage Instructions</label>
+                    <textarea id="product-usage-instructions" class="form-control" rows="3" placeholder="Enter detailed usage instructions (e.g., Mix 1 scoop with 250ml water, take 30 minutes before workout)"></textarea>
+                    <small class="form-text text-muted">Provide clear dosage and usage guidelines for customers.</small>
+                </div>
+                <div class="form-group">
+                    <label for="product-health-benefits">Health Benefits</label>
+                    <select id="product-health-benefits" class="form-control" multiple size="5">
+                        <!-- Health benefits will be loaded here -->
+                    </select>
+                    <small class="form-text text-muted">Select multiple health benefits by holding Ctrl (or Cmd on Mac) while clicking. These are used for product recommendations.</small>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <div>
+                        <input type="radio" id="product-active" name="product-status" value="1" checked>
+                        <label for="product-active">Active</label>
+                        <input type="radio" id="product-inactive" name="product-status" value="0">
+                        <label for="product-inactive">Inactive</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="faq-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="faq-modal-title">Add FAQ</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="faq-form">
+                <input type="hidden" id="faq-id">
+                <div class="form-group">
+                    <label for="faq-question">Question</label>
+                    <input type="text" id="faq-question" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="faq-answer">Answer</label>
+                    <textarea id="faq-answer" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="faq-category">Category</label>
+                    <select id="faq-category" class="form-control" required onchange="toggleNewCategoryField()">
+                        <option value="">Select Category</option>
+                        <option value="new">+ Add New Category</option>
+                        <!-- Categories will be loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group" id="new-category-group" style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #4361ee; margin-top: 10px;">
+                    <label for="new-faq-category"><strong>New Category Name</strong></label>
+                    <input type="text" id="new-faq-category" class="form-control" placeholder="Enter new category name" style="margin-top: 5px;">
+                </div>
+
+                <script>
+                    // Direct script to handle the new category field
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Get elements
+                        const categorySelect = document.getElementById('faq-category');
+                        const newCategoryGroup = document.getElementById('new-category-group');
+                        const newCategoryInput = document.getElementById('new-faq-category');
+
+                        // Function to toggle the new category field
+                        function toggleNewCategoryField() {
+                            if (categorySelect.value === 'new') {
+                                // Show the new category field
+                                newCategoryGroup.style.display = 'block';
+                                newCategoryGroup.style.visibility = 'visible';
+
+                                // Enable the input field
+                                newCategoryInput.disabled = false;
+                                newCategoryInput.readOnly = false;
+
+                                // Focus on the input field
+                                setTimeout(() => {
+                                    newCategoryInput.focus();
+                                    console.log('Focused on input field');
+                                }, 100);
+
+                                console.log('Showing and enabling new category field');
+                            } else {
+                                // Hide the new category field
+                                newCategoryGroup.style.display = 'none';
+
+                                // Disable the input field and clear its value
+                                newCategoryInput.disabled = true;
+                                newCategoryInput.readOnly = true;
+                                newCategoryInput.value = '';
+
+                                console.log('Hiding and disabling new category field');
+                            }
+                        }
+
+                        // Set initial state
+                        if (categorySelect && newCategoryGroup && newCategoryInput) {
+                            toggleNewCategoryField();
+
+                            // Add change event listener to the category dropdown
+                            categorySelect.addEventListener('change', toggleNewCategoryField);
+                        }
+
+                        // Also handle when the modal is shown
+                        const faqModal = document.getElementById('faq-modal');
+                        if (faqModal) {
+                            faqModal.addEventListener('shown.bs.modal', function() {
+                                console.log('Modal shown, checking category field');
+                                toggleNewCategoryField();
+                            });
+                        }
+                    });
+                </script>
+                <div class="form-group">
+                    <label>Status</label>
+                    <div>
+                        <input type="radio" id="faq-active" name="faq-status" value="1" checked>
+                        <label for="faq-active">Active</label>
+                        <input type="radio" id="faq-inactive" name="faq-status" value="0">
+                        <label for="faq-inactive">Inactive</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Store user information for the admin panel
+        const userInfo = {
+            isLoggedIn: {% if session.get('user_id') %}true{% else %}false{% endif %},
+            userId: {% if session.get('user_id') %}{{ session.get('user_id') }}{% else %}null{% endif %},
+            username: "{{ session.get('username', '') }}",
+            role: "{{ session.get('role', 'guest') }}"
+        };
+
+        // Function to load health benefits for the multi-select
+        function loadHealthBenefits() {
+            return fetch('/api/admin/health_benefits')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const benefitSelect = document.getElementById('product-health-benefits');
+                        benefitSelect.innerHTML = ''; // Clear existing options
+
+                        // Group benefits by category
+                        const benefitsByCategory = {};
+                        data.benefits.forEach(benefit => {
+                            if (!benefitsByCategory[benefit.category]) {
+                                benefitsByCategory[benefit.category] = [];
+                            }
+                            benefitsByCategory[benefit.category].push(benefit);
+                        });
+
+                        // Add options grouped by category
+                        for (const category in benefitsByCategory) {
+                            const optgroup = document.createElement('optgroup');
+                            optgroup.label = formatCategoryName(category);
+
+                            benefitsByCategory[category].forEach(benefit => {
+                                const option = document.createElement('option');
+                                option.value = benefit.benefit_id;
+                                option.textContent = benefit.name;
+                                optgroup.appendChild(option);
+                            });
+
+                            benefitSelect.appendChild(optgroup);
+                        }
+                    } else {
+                        console.error('Failed to load health benefits:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading health benefits:', error);
+                });
+        }
+
+        // Format category name for display (e.g., "muscle_building" -> "Muscle Building")
+        function formatCategoryName(category) {
+            return category
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Direct script to handle category change
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing health benefits...');
+
+            // Make sure the product form is visible when adding a new product
+            document.querySelectorAll('.add-product-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Load health benefits when adding a new product
+                    setTimeout(() => {
+                        loadHealthBenefits();
+                    }, 500);
+                });
+            });
+
+            // Health benefits functionality is now handled in admin_product_benefits.js
+
+            // Add direct event listener for category dropdown
+            const categorySelect = document.getElementById('faq-category');
+            if (categorySelect) {
+                categorySelect.addEventListener('change', function() {
+                    console.log('Category changed to:', this.value);
+
+                    // Use the global function if available, otherwise use inline code
+                    if (typeof window.showHideNewCategoryField === 'function') {
+                        window.showHideNewCategoryField(this.value);
+                    } else {
+                        // Fallback to inline code
+                        const newCategoryGroup = document.getElementById('new-category-group');
+                        const newCategoryInput = document.getElementById('new-faq-category');
+
+                        if (this.value === 'new') {
+                            console.log('Showing new category input field (inline fallback)');
+                            if (newCategoryGroup) {
+                                newCategoryGroup.setAttribute('style', 'display: block !important; visibility: visible !important; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #4361ee; margin-top: 10px;');
+                            }
+                            if (newCategoryInput) {
+                                newCategoryInput.style.display = 'block';
+                                newCategoryInput.style.visibility = 'visible';
+                                setTimeout(() => {
+                                    newCategoryInput.focus();
+                                }, 100);
+                            }
+                        } else {
+                            console.log('Hiding new category input field (inline fallback)');
+                            if (newCategoryGroup) {
+                                newCategoryGroup.style.display = 'none';
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin_product_benefits.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin_products.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin_faqs.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin_promotions.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/admin_analytics.js') }}"></script>
+</body>
+</html>

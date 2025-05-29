@@ -1,0 +1,20 @@
+# Rock Chatbot Dependencies - Updated 2025
+
+# Core Flask dependencies
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+
+# Translation API
+googletrans==4.0.0-rc1
+
+# HTTP requests
+requests==2.31.0
+
+# Standard library modules used:
+# - sqlite3: For database operations
+# - json: For handling JSON data
+# - re: For regular expressions
+# - datetime: For date and time operations
+# - os: For file system operations
+# - threading: For background tasks
+# - hashlib: For password hashing

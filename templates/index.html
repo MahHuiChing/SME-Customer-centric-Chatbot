@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Supplements Chatbot</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/5w2fl3vb.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <a href="{{ url_for('index') }}">
+                    <img src="{{ url_for('static', filename='images/5w2fl3vb.svg') }}" alt="Rock Supplements Logo" height="40">
+                    Rock Supplements
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    {% if session.get('user_id') %}
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        {% if session.get('role') in ['manager', 'agent'] %}
+                            <li><a href="{{ url_for('admin') }}">Admin</a></li>
+                        {% endif %}
+                        <li><a href="#">Welcome, {{ session.get('name', 'User') }}</a></li>
+                        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
+                        <li><a href="{{ url_for('register') }}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>Rock Chatbot</h2>
+                    <div class="language-selector">
+                        <select id="language-select">
+                            <option value="en">English</option>
+                            <option value="ms">Bahasa Melayu</option>
+                            <option value="zh">中文</option>
+                            <option value="ta">தமிழ்</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will be added here dynamically -->
+                </div>
+                <div class="chat-input" id="chat-input">
+                    <!-- Message input box for agent communication (hidden by default) -->
+                    <div id="message-input-container" class="message-input-container" style="display: none;">
+                        <div class="agent-status" id="agent-status">
+                            <span class="status-indicator"></span>
+                            <span class="status-text" id="status-text">Connected to agent</span>
+                        </div>
+                        <div class="input-wrapper">
+                            <input type="text" id="message-input" placeholder="Type your message to the agent..." maxlength="500">
+                            <button id="send-button" class="send-button">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Rock Supplements. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Socket.IO Client Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+
+    <script>
+        // Store user information for the chat
+        const userInfo = {
+            isLoggedIn: {% if session.get('user_id') %}true{% else %}false{% endif %},
+            userId: {% if session.get('user_id') %}{{ session.get('user_id') }}{% else %}null{% endif %},
+            username: "{{ session.get('username', '') }}",
+            role: "{{ session.get('role', 'guest') }}"
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}?v=3.0"></script>
+</body>
+</html>
