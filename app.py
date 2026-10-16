@@ -20,13 +20,16 @@ from rock.agent_interface import AgentInterface
 from rock.health_goals import get_all_standard_goals
 
 app = Flask(__name__)
-app.secret_key = 'rock_supplements_chatbot_secret_key'  # Change this in production
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-only-change-me')
 
 # Initialize SocketIO
 socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
 
 # Initialize the chatbot and other components
-DB_PATH = 'data/rock_chatbot.db'
+DB_PATH = os.environ.get(
+    'DATABASE_PATH',
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'rock_chatbot.db'),
+)
 
 chatbot = RockChatbot(DB_PATH)
 auth = Auth(Database(DB_PATH))
@@ -4094,4 +4097,9 @@ if __name__ == '__main__':
         print(f"Database not found at {DB_PATH}. Please initialize the database first.")
         sys.exit(1)
 
-    socketio.run(app, debug=True, host='127.0.0.1', port=5000)
+    socketio.run(
+        app,
+        debug=os.environ.get('FLASK_DEBUG', '').lower() == 'true',
+        host='0.0.0.0',
+        port=int(os.environ.get('PORT', '5000')),
+    )

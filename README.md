@@ -66,6 +66,12 @@ chatbot4/
 
 ## Usage
 
+### Free demo deployment on Render
+
+The repository includes a `render.yaml` Blueprint for a free Render web service. In Render, choose **New > Blueprint**, connect this repository, and create the service. Render generates `SECRET_KEY` automatically. The service supports WebSockets and sleeps when idle.
+
+The bundled SQLite database is a demo seed with customer, staff, order, and chat records removed. Render's free filesystem is temporary, so data created while the service is running can be lost after a restart, redeploy, or idle spin-down. Use this setup for demos only; persistent customer data requires durable database storage.
+
 ### Run the Complete Application
 
 To start the Rock chatbot web application with all features:
