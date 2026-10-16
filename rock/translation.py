@@ -5,6 +5,7 @@ This module provides translation functionality for the Rock chatbot using Google
 It uses the googletrans library, which is a free and unlimited Python library that implements Google Translate API.
 """
 
+import asyncio
 import time
 from typing import Dict, Optional, List
 import logging
@@ -14,8 +15,14 @@ from googletrans import Translator, LANGUAGES
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Initialize the translator
-translator = Translator()
+def _translate_sync(text: str, target: str, source: str) -> str:
+    """Run googletrans' async API from the chatbot's synchronous handlers."""
+    async def translate_once() -> str:
+        async with Translator() as client:
+            result = await client.translate(text, dest=target, src=source)
+            return result.text
+
+    return asyncio.run(translate_once())
 
 # Language code mapping (ISO 639-1 codes)
 LANGUAGE_CODES = {
@@ -108,8 +115,7 @@ class TranslationService:
             logger.info(f"Translating with googletrans: {text[:30]}... to {target}")
 
             # Use googletrans to translate
-            result = translator.translate(text, dest=target, src=source_language)
-            translated_text = result.text
+            translated_text = _translate_sync(text, target, source_language)
 
             # Cache the result
             TRANSLATION_CACHE[cache_key] = translated_text
@@ -186,8 +192,7 @@ class TranslationService:
 
             try:
                 # Use googletrans to translate
-                result = translator.translate(text, dest=target, src=source_language)
-                translated_text = result.text
+                translated_text = _translate_sync(text, target, source_language)
 
                 # Cache the result
                 TRANSLATION_CACHE[cache_key] = translated_text
